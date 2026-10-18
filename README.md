@@ -11,6 +11,9 @@ The application supports ten mathematical operations, calculation history with u
 - Calculation history with undo, redo, and clear
 - Automatic CSV history saving and loading
 - Factory, Memento, and Observer design patterns
+- Dynamic help menu generated from registered operations
+- Color-coded Outputs using Colorama for REPL
+- Command queuing using Command Design Pattern
 - Environment-based configuration using `python-dotenv`
 - Input validation and error handling
 - Calculation and error logging
@@ -145,6 +148,8 @@ abs_diff 5 10
 | `clear` | Clear calculation history |
 | `exit` | Exit the calculator |
 | `quit` | Exit the calculator |
+| `queue <operation> <number1> <number2>` | Add a calculation to the command queue |
+| `run` | Execute queued calculations
 
 Example session:
 
@@ -167,6 +172,25 @@ Calculation history cleared.
 calculator> exit
 Goodbye!
 ```
+### Queued Calculations
+
+The calculator supports queuing multiple operations for later execution.
+
+```text
+calculator> queue add 10 5
+Queued: add 10 5
+
+calculator> queue multiply 4 3
+Queued: multiply 4 3
+
+calculator> run
+Result: 15.0
+Result: 12.0
+```
+
+Queued calculations are executed in the order they were added. Successful calculations are recorded in history and saved to CSV when autosaving is enabled.
+
+If a queued calculation fails, execution stops and the error is displayed. Remaining queued commands can be executed with another `run` command.
 
 ## Design Patterns
 
@@ -186,6 +210,39 @@ The calculator notifies registered observers after a successful calculation.
 - `AutoSaveObserver` saves calculation history to CSV.
 
 The calculator also synchronizes CSV history after undo, redo, and clear operations when autosaving is enabled.
+
+### Decorator Pattern
+
+The `dynamic_operations` decorator in `app/help_menu.py` enhances the calculator's help menu.
+
+It retrieves available operation names from `OperationFactory` whenever the help menu is displayed.
+
+This ensures that newly registered operations automatically appear in the help menu without manually updating the REPL.
+
+### Command Pattern
+
+The Command Pattern is implemented in `app/commands.py`.
+
+- `Command` defines the abstract command interface.
+- `CalculationCommand` encapsulates a calculator operation and its operands.
+- `CommandQueue` stores commands and executes them.
+
+The REPL provides `queue` and `run` commands for queuing and executing calculations.
+
+The Command Pattern delegates calculations to the existing `Calculator`, preserving input validation, history management, logging, and CSV persistence.
+
+## Color-Coded Outputs
+
+The interactive calculator uses `colorama` to improve readability.
+
+| Color | Output |
+|---|---|
+| Green | Successful calculation results |
+| Red | Errors and invalid commands |
+| Cyan | Welcome messages, help, and confirmations |
+| Yellow | Calculation history and empty-queue messages |
+
+Colors are applied in `app/repl.py` without changing the calculator's underlying mathematical operations.
 
 ## Configuration
 
@@ -287,11 +344,11 @@ python -m pytest --cov=app --cov-report=term-missing --cov-fail-under=90
 
 At the time of documentation, the project has:
 
-- **147 passing tests**
+- **161 passing tests**
 - **100% statement coverage**
 - **90% minimum coverage requirement**
 
-Tests cover calculations, mathematical operations, configuration, history management, observers, logging, input validation, persistence, and the REPL.
+Tests cover calculations, mathematical operations, configuration, history management, observers, logging, input validation, persistence, the REPL, dynamic help generation, color-coded outputs, and command queuing.
 
 ## Continuous Integration
 
@@ -326,7 +383,9 @@ mid-term-project/
 │   ├── calculator.py
 │   ├── calculator_config.py
 │   ├── calculator_memento.py
+│   ├── commands.py
 │   ├── exceptions.py
+│   ├── help_menu.py
 │   ├── history.py
 │   ├── input_validators.py
 │   ├── logger.py
@@ -334,6 +393,19 @@ mid-term-project/
 │   ├── operations.py
 │   └── repl.py
 ├── tests/
+│   ├── test_calculation.py
+│   ├── test_calculator.py
+│   ├── test_calculator_config.py
+│   ├── test_calculator_memento.py
+│   ├── test_commands.py
+│   ├── test_exceptions.py
+│   ├── test_help_menu.py
+│   ├── test_history.py
+│   ├── test_input_validators.py
+│   ├── test_logger.py
+│   ├── test_observers.py
+│   ├── test_operations.py
+│   └── test_repl.py
 ├── .gitignore
 ├── README.md
 └── requirements.txt
@@ -341,8 +413,16 @@ mid-term-project/
 
 Runtime directories such as `logs/` and `history/` are created automatically.
 
+The `app/` directory contains the calculator implementation, including the Factory, Memento, Observer, Decorator, and Command design patterns.
+
+The `tests/` directory contains automated pytest tests covering calculator operations, configuration, history management, persistence, logging, input validation, interactive commands, and optional features.
+
+The `.github/workflows/` directory contains the GitHub Actions workflow that runs automated tests and enforces a minimum of 90% statement coverage.
+
+Runtime directories such as `logs/` and `history/` are created automatically.
+
 ## Repository
 
-[Advanced Python Calculator — GitHub](https://github.com/aa3989/mid-term-project)
+[Advanced Command-Line Calculator Application with Python — GitHub](https://github.com/aa3989/mid-term-project)
 
 Developed for the NJIT IS601 midterm project.
