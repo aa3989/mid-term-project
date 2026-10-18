@@ -10,6 +10,12 @@ class InputValidator:
     @staticmethod
     def validate_number(value, max_value=1000000):
         """Convert input to float and validate its range."""
+
+        if isinstance(value, bool):
+            raise ValidationError(
+                "Boolean values are not valid numerical inputs."
+            )
+
         try:
             number = float(value)
         except (ValueError, TypeError) as error:
@@ -32,6 +38,7 @@ class InputValidator:
     @staticmethod
     def validate_operands(a, b, max_value=1000000):
         """Validate both operands."""
+
         first = InputValidator.validate_number(
             a, max_value
         )

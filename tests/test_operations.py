@@ -1,7 +1,56 @@
 
 import pytest
 
+from app.exceptions import OperationError
 from app.operations import OperationFactory
+
+
+@pytest.mark.parametrize(
+    "operation",
+    ["divide", "modulus", "int_divide", "percent"],
+)
+def test_zero_denominator_raises_operation_error(operation):
+    calculator_operation = OperationFactory.create_operation(
+        operation
+    )
+
+    with pytest.raises(OperationError):
+        calculator_operation.execute(10, 0)
+
+
+@pytest.mark.parametrize(
+    "a,b",
+    [
+        (16, 0),
+        (-16, 2),
+        (-16, 2.5),
+        (0, -2),
+    ],
+)
+def test_invalid_roots_raise_operation_error(a, b):
+    root = OperationFactory.create_operation("root")
+
+    with pytest.raises(OperationError):
+        root.execute(a, b)
+
+
+def test_invalid_power_raises_operation_error():
+    power = OperationFactory.create_operation("power")
+
+    with pytest.raises(OperationError):
+        power.execute(0, -1)
+
+
+def test_complex_power_raises_operation_error():
+    power = OperationFactory.create_operation("power")
+
+    with pytest.raises(OperationError):
+        power.execute(-4, 0.5)
+
+
+def test_invalid_operation_raises_operation_error():
+    with pytest.raises(OperationError):
+        OperationFactory.create_operation("unknown")
 
 
 @pytest.mark.parametrize(
@@ -40,10 +89,10 @@ def test_operations(operation, a, b, expected):
 def test_invalid_inputs(operation, a, b):
     instance = OperationFactory.create_operation(operation)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(OperationError):
         instance.execute(a, b)
 
 
 def test_invalid_operation():
-    with pytest.raises(ValueError):
+    with pytest.raises(OperationError):
         OperationFactory.create_operation("unknown")
