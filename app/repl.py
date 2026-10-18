@@ -5,6 +5,7 @@ from app.calculator import Calculator
 def main():
     """Run the interactive calculator."""
     calculator = Calculator()
+    calculator.load_history()
 
     print("Advanced Python Calculator")
     print("Type 'help' for available commands.")

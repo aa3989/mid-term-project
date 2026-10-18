@@ -92,3 +92,109 @@ def test_autosave_disabled(tmp_path):
     calculator.calculate("add", 10, 5)
 
     assert not config.history_file_path.exists()
+
+
+def test_load_history_from_csv(tmp_path):
+    config = CalculatorConfig(
+        log_dir=tmp_path / "logs",
+        history_dir=tmp_path / "history",
+        auto_save=True,
+    )
+
+    original = Calculator(config)
+    original.calculate("add", 10, 5)
+    original.calculate("multiply", 4, 3)
+
+    restored = Calculator(config)
+    restored.load_history()
+
+    assert len(restored.history) == 2
+    assert restored.history[0].operation == "add"
+    assert restored.history[0].result == 15.0
+    assert restored.history[1].operation == "multiply"
+    assert restored.history[1].result == 12.0
+    assert (
+        restored.history[0].timestamp
+        == original.history[0].timestamp
+    )
+
+
+def test_load_history_when_file_missing(tmp_path):
+    config = CalculatorConfig(
+        log_dir=tmp_path / "logs",
+        history_dir=tmp_path / "history",
+        auto_save=False,
+    )
+
+    calculator = Calculator(config)
+    calculator.load_history()
+
+    assert calculator.history == []
+
+
+def test_undo_updates_saved_history(tmp_path):
+    config = CalculatorConfig(
+        log_dir=tmp_path / "logs",
+        history_dir=tmp_path / "history",
+        auto_save=True,
+    )
+
+    calculator = Calculator(config)
+    calculator.calculate("add", 10, 5)
+    calculator.calculate("multiply", 4, 3)
+    calculator.undo()
+
+    restored = Calculator(config)
+    restored.load_history()
+
+    assert len(restored.history) == 1
+    assert restored.history[0].operation == "add"
+
+
+def test_redo_updates_saved_history(tmp_path):
+    config = CalculatorConfig(
+        log_dir=tmp_path / "logs",
+        history_dir=tmp_path / "history",
+        auto_save=True,
+    )
+
+    calculator = Calculator(config)
+    calculator.calculate("add", 10, 5)
+    calculator.undo()
+    calculator.redo()
+
+    restored = Calculator(config)
+    restored.load_history()
+
+    assert len(restored.history) == 1
+    assert restored.history[0].result == 15.0
+
+
+def test_clear_updates_saved_history(tmp_path):
+    config = CalculatorConfig(
+        log_dir=tmp_path / "logs",
+        history_dir=tmp_path / "history",
+        auto_save=True,
+    )
+
+    calculator = Calculator(config)
+    calculator.calculate("add", 10, 5)
+    calculator.clear()
+
+    restored = Calculator(config)
+    restored.load_history()
+
+    assert restored.history == []
+
+
+def test_save_history_when_autosave_disabled(tmp_path):
+    config = CalculatorConfig(
+        log_dir=tmp_path / "logs",
+        history_dir=tmp_path / "history",
+        auto_save=False,
+    )
+
+    calculator = Calculator(config)
+    calculator.save_history()
+
+    assert not config.history_file_path.exists()

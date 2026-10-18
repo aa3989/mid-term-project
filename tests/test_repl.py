@@ -119,3 +119,21 @@ def test_repl_entry_point_coverage(capsys):
 
     assert "Advanced Python Calculator" in output
     assert "Goodbye!" in output
+
+def test_repl_loads_saved_history(capsys, tmp_path):
+    from app.calculator import Calculator
+    from app.calculator_config import CalculatorConfig
+
+    config = CalculatorConfig(
+        log_dir=tmp_path / "logs",
+        history_dir=tmp_path / "history",
+        auto_save=True,
+    )
+
+    calculator = Calculator(config)
+    calculator.calculate("add", 10, 5)
+
+    with patch("app.repl.Calculator", return_value=Calculator(config)):
+        output = run_repl(["history", "exit"], capsys)
+
+    assert "10.0 add 5.0 = 15.0" in output

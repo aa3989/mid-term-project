@@ -1,4 +1,4 @@
-
+import pandas as pd
 from app.calculation import Calculation
 from app.calculator_config import CalculatorConfig
 from app.history import HistoryManager
@@ -54,6 +54,13 @@ class Calculator:
         """Notify observers of a new calculation."""
         for observer in self.observers:
             observer.update(calculation, self.history)
+    
+    def save_history(self):
+        """Persist the current history to CSV."""
+        if self.config.auto_save:
+            for observer in self.observers:
+                if isinstance(observer, AutoSaveObserver):
+                    observer.update(None, self.history)
 
     
     def calculate(self, operation, a, b):
@@ -88,12 +95,37 @@ class Calculator:
 
     def undo(self):
         """Undo the last history change."""
-        return self.history_manager.undo()
+        history = self.history_manager.undo()
+        self.save_history()
+        return history
 
     def redo(self):
         """Redo the last undone change."""
-        return self.history_manager.redo()
+        history = self.history_manager.redo()
+        self.save_history()
+        return history
 
     def clear(self):
         """Clear calculation history."""
         self.history_manager.clear()
+        self.save_history()
+
+    
+    def load_history(self):
+        """Load saved calculation history from CSV."""
+        file_path = self.config.history_file_path
+
+        if not file_path.exists():
+            return
+
+        dataframe = pd.read_csv(
+            file_path,
+            encoding=self.config.default_encoding,
+        )
+
+        calculations = [
+            Calculation.from_dict(row)
+            for row in dataframe.to_dict(orient="records")
+        ]
+
+        self.history_manager.replace_history(calculations)

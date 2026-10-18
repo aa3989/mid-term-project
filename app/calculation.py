@@ -47,3 +47,15 @@ class Calculation:
             "result": self.result,
             "timestamp": self.timestamp.isoformat()
         }
+
+    @classmethod
+    def from_dict(cls, data):
+        """Reconstruct a calculation from saved data."""
+        calculation = cls(
+            operation=data["operation"],
+            operand1=float(data["operand1"]),
+            operand2=float(data["operand2"]),
+            timestamp=datetime.fromisoformat(data["timestamp"]),
+        )
+
+        return calculation

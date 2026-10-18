@@ -71,3 +71,27 @@ def test_calculation_wraps_builtin_error():
             OperationError, match="Invalid arithmetic"
         ):
             Calculation("add", 10, 5)
+
+
+def test_calculation_from_dict():
+    original = Calculation("add", 10, 5)
+
+    restored = Calculation.from_dict(original.to_dict())
+
+    assert restored.operation == original.operation
+    assert restored.operand1 == original.operand1
+    assert restored.operand2 == original.operand2
+    assert restored.result == original.result
+    assert restored.timestamp == original.timestamp
+
+
+def test_calculation_from_dict_invalid_data():
+    invalid_data = {
+        "operation": "add",
+        "operand1": "invalid",
+        "operand2": 5,
+        "timestamp": "2026-01-01T12:00:00",
+    }
+
+    with pytest.raises(ValueError):
+        Calculation.from_dict(invalid_data)
