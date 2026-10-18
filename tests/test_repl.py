@@ -5,6 +5,7 @@ import warnings
 from unittest.mock import patch
 
 from app.repl import main
+from colorama import Fore
 
 def run_repl(commands, capsys):
     """Run the REPL with simulated user commands."""
@@ -137,3 +138,21 @@ def test_repl_loads_saved_history(capsys, tmp_path):
         output = run_repl(["history", "exit"], capsys)
 
     assert "10.0 add 5.0 = 15.0" in output
+
+
+def test_repl_success_output_is_green(capsys):
+    output = run_repl(["add 10 5", "exit"], capsys)
+
+    assert Fore.GREEN + "Result: 15.0" in output
+
+
+def test_repl_error_output_is_red(capsys):
+    output = run_repl(["divide 10 0", "exit"], capsys)
+
+    assert Fore.RED + "Error:" in output
+
+
+def test_repl_help_output_is_cyan(capsys):
+    output = run_repl(["help", "exit"], capsys)
+
+    assert Fore.CYAN + "Operations:" in output

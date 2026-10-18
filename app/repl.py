@@ -1,13 +1,17 @@
-
+from colorama import Fore, Style, init
 from app.calculator import Calculator
 from app.help_menu import get_help_menu
 
+
+
 def main():
     """Run the interactive calculator."""
+    init(autoreset=True, strip=False)
+
     calculator = Calculator()
     calculator.load_history()
 
-    print("Advanced Python Calculator")
+    print(Fore.CYAN + "Advanced Python Calculator" + Style.RESET_ALL)
     print("Type 'help' for available commands.")
 
     while True:
@@ -21,47 +25,54 @@ def main():
             command = parts[0].lower()
 
             if command in ("exit", "quit"):
-                print("Goodbye!")
+                print(Fore.CYAN + "Goodbye!" + Style.RESET_ALL)
                 break
 
             elif command == "help":
-                print(get_help_menu())
+                print(Fore.CYAN + get_help_menu() + Style.RESET_ALL)
 
             elif command == "history":
                 if not calculator.history:
-                    print("No calculation history.")
+                    print(Fore.YELLOW + "No calculation history." + Style.RESET_ALL)
                 else:
                     for index, calculation in enumerate(
                         calculator.history, start=1
                     ):
-                        print(f"{index}. {calculation}")
+                        print(
+                            Fore.YELLOW
+                            + f"{index}. {calculation}"
+                            + Style.RESET_ALL
+                        )
 
             elif command == "undo":
                 calculator.undo()
-                print("Last history change undone.")
+                print(Fore.CYAN + "Last history change undone." + Style.RESET_ALL)
 
             elif command == "redo":
                 calculator.redo()
-                print("Last history change redone.")
+                print(Fore.CYAN + "Last history change redone." + Style.RESET_ALL)
 
             elif command == "clear":
                 calculator.clear()
-                print("Calculation history cleared.")
+                print(Fore.CYAN + "Calculation history cleared." + Style.RESET_ALL)
 
             else:
                 if len(parts) != 3:
                     print(
-                        "Invalid command. Use: "
-                        "<operation> <number1> <number2>"
+                        Fore.RED
+                        + "Invalid command. Use: "
+                        + "<operation> <number1> <number2>"
+                        + Style.RESET_ALL
                     )
                     continue
 
                 operation, a, b = parts
                 result = calculator.calculate(operation, a, b)
-                print(f"Result: {result}")
+
+                print(Fore.GREEN + f"Result: {result}" + Style.RESET_ALL)
 
         except Exception as error:
-            print(f"Error: {error}")
+            print(Fore.RED + f"Error: {error}" + Style.RESET_ALL)
 
 
 if __name__ == "__main__":
