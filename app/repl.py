@@ -1,6 +1,6 @@
 
 from app.calculator import Calculator
-
+from app.help_menu import get_help_menu
 
 def main():
     """Run the interactive calculator."""
@@ -25,16 +25,7 @@ def main():
                 break
 
             elif command == "help":
-                print(
-                    "Operations: add, subtract, multiply, divide, "
-                    "power, root, modulus, int_divide, percent, abs_diff"
-                )
-                print(
-                    "Usage: <operation> <number1> <number2>"
-                )
-                print(
-                    "Commands: help, history, undo, redo, clear, exit"
-                )
+                print(get_help_menu())
 
             elif command == "history":
                 if not calculator.history:
