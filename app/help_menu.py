@@ -20,5 +20,5 @@ def get_help_menu():
     """Return the calculator's basic help information."""
     return (
         "Usage: <operation> <number1> <number2>\n"
-        "Commands: help, history, undo, redo, clear, exit"
+        "Commands: help, history, undo, redo, clear, queue, run, exit"
     )

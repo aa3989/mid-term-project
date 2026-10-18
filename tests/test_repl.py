@@ -156,3 +156,41 @@ def test_repl_help_output_is_cyan(capsys):
     output = run_repl(["help", "exit"], capsys)
 
     assert Fore.CYAN + "Operations:" in output
+
+
+def test_repl_queued_calculations(capsys):
+    output = run_repl(
+        [
+            "queue add 10 5",
+            "queue multiply 4 3",
+            "run",
+            "exit",
+        ],
+        capsys,
+    )
+
+    assert "Queued: add 10 5" in output
+    assert "Queued: multiply 4 3" in output
+    assert output.index("Result: 15.0") < output.index("Result: 12.0")
+
+
+def test_repl_run_empty_queue(capsys):
+    output = run_repl(["run", "exit"], capsys)
+
+    assert "No queued calculations." in output
+
+
+def test_repl_invalid_queue_format(capsys):
+    output = run_repl(["queue add 10", "exit"], capsys)
+
+    assert "Invalid queue command" in output
+
+
+def test_repl_queued_calculation_error(capsys):
+    output = run_repl(
+        ["queue divide 10 0", "run", "exit"],
+        capsys,
+    )
+
+    assert "Cannot divide by zero" in output
+    assert "Goodbye!" in output
