@@ -3,7 +3,7 @@ import pytest
 
 from app.exceptions import OperationError
 from app.operations import OperationFactory
-
+from app.operations import Operation
 
 @pytest.mark.parametrize(
     "operation",
@@ -96,3 +96,12 @@ def test_invalid_inputs(operation, a, b):
 def test_invalid_operation():
     with pytest.raises(OperationError):
         OperationFactory.create_operation("unknown")
+
+def test_abstract_operation_execute():
+    class TestOperation(Operation):
+        def execute(self, a, b):
+            return super().execute(a, b)
+
+    operation = TestOperation()
+
+    assert operation.execute(10, 5) is None

@@ -6,6 +6,7 @@ import pytest
 
 from app.calculation import Calculation
 from app.observers import LoggingObserver, AutoSaveObserver
+from app.observers import CalculatorObserver
 
 
 def test_logging_observer(caplog):
@@ -68,3 +69,12 @@ def test_autosave_creates_directory(tmp_path):
     observer.update(calculation, [calculation])
 
     assert file_path.exists()
+
+def test_abstract_observer_update():
+    class TestObserver(CalculatorObserver):
+        def update(self, calculation, history):
+            return super().update(calculation, history)
+
+    observer = TestObserver()
+
+    assert observer.update(None, []) is None

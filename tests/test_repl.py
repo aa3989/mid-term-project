@@ -1,6 +1,10 @@
+import runpy
+import subprocess
+import sys
+import warnings
 from unittest.mock import patch
-from app.repl import main
 
+from app.repl import main
 
 def run_repl(commands, capsys):
     """Run the REPL with simulated user commands."""
@@ -76,3 +80,42 @@ def test_repl_invalid_command_format(capsys):
     )
 
     assert "Invalid command" in output
+
+
+def test_repl_empty_input(capsys):
+    output = run_repl(["", "   ", "exit"], capsys)
+
+    assert "Goodbye!" in output
+
+def test_repl_module_entry_point():
+    result = subprocess.run(
+        [sys.executable, "-m", "app.repl"],
+        input="exit\n",
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    assert "Advanced Python Calculator" in result.stdout
+    assert "Goodbye!" in result.stdout
+
+
+def test_repl_entry_point_coverage(capsys):
+    """Test the REPL entry point within the coverage process."""
+    with patch("builtins.input", side_effect=["exit"]):
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                message=r".*app\.repl.*found in sys\.modules.*",
+                category=RuntimeWarning,
+            )
+
+            runpy.run_module(
+                "app.repl",
+                run_name="__main__",
+            )
+
+    output = capsys.readouterr().out
+
+    assert "Advanced Python Calculator" in output
+    assert "Goodbye!" in output

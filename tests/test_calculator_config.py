@@ -1,4 +1,3 @@
-
 import pytest
 
 from app.calculator_config import CalculatorConfig
@@ -126,3 +125,25 @@ def test_nonfinite_max_input(tmp_path):
             history_dir=tmp_path / "history",
             max_input_value=float("inf"),
         )
+
+@pytest.mark.parametrize(
+    "field,value,message",
+    [
+        ("max_history_size", "ten", "Maximum history size must be an integer"),
+        ("precision", "two", "Precision must be an integer"),
+        ("auto_save", "yes", "Auto-save must be true or false"),
+        ("log_file", "", "Log and history filenames cannot be empty"),
+        ("history_file", "", "Log and history filenames cannot be empty"),
+    ],
+)
+def test_invalid_configuration_field_types(
+    tmp_path, field, value, message
+):
+    config_values = {
+        "log_dir": tmp_path / "logs",
+        "history_dir": tmp_path / "history",
+        field: value,
+    }
+
+    with pytest.raises(ConfigurationError, match=message):
+        CalculatorConfig(**config_values)

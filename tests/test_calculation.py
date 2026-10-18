@@ -1,7 +1,7 @@
 
 import pytest
 from datetime import datetime
-
+from unittest.mock import patch
 from app.calculation import Calculation
 from app.exceptions import OperationError
 
@@ -59,3 +59,15 @@ def test_calculation_to_dict():
 def test_calculation_errors(operation, a, b):
     with pytest.raises(OperationError):
         Calculation(operation, a, b)
+
+
+def test_calculation_wraps_builtin_error():
+    with patch(
+        "app.calculation.OperationFactory.create_operation"
+    ) as mock_factory:
+        mock_factory.side_effect = ValueError("Invalid arithmetic")
+
+        with pytest.raises(
+            OperationError, match="Invalid arithmetic"
+        ):
+            Calculation("add", 10, 5)
