@@ -55,23 +55,36 @@ class Calculator:
         for observer in self.observers:
             observer.update(calculation, self.history)
 
+    
     def calculate(self, operation, a, b):
         """Perform a calculation and notify observers."""
-        a, b = InputValidator.validate_operands(
-            a,
-            b,
-            self.config.max_input_value,
-        )
+        try:
+            a, b = InputValidator.validate_operands(
+                a,
+                b,
+                self.config.max_input_value,
+            )
 
-        calculation = Calculation(operation, a, b)
+            calculation = Calculation(operation, a, b)
 
-        self.history_manager.add_calculation(
-            calculation
-        )
+            self.history_manager.add_calculation(
+                calculation
+            )
 
-        self.notify_observers(calculation)
+            self.notify_observers(calculation)
 
-        return calculation.result
+            return calculation.result
+
+        except Exception as error:
+            self.logger.error(
+                "Calculation failed | Operation: %s | "
+                "Operand1: %s | Operand2: %s | Error: %s",
+                operation,
+                a,
+                b,
+                error,
+            )
+            raise
 
     def undo(self):
         """Undo the last history change."""
