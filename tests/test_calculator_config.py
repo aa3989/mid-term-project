@@ -63,3 +63,66 @@ def test_configuration_file_paths(tmp_path):
         config.history_file_path
         == tmp_path / "history" / "calculator_history.csv"
     )
+
+
+def test_invalid_precision_environment(monkeypatch):
+    monkeypatch.setenv("CALCULATOR_PRECISION", "abc")
+
+    with pytest.raises(ConfigurationError):
+        CalculatorConfig()
+
+
+def test_invalid_history_environment(monkeypatch):
+    monkeypatch.setenv(
+        "CALCULATOR_MAX_HISTORY_SIZE", "invalid"
+    )
+
+    with pytest.raises(ConfigurationError):
+        CalculatorConfig()
+
+
+def test_invalid_auto_save_environment(monkeypatch):
+    monkeypatch.setenv(
+        "CALCULATOR_AUTO_SAVE", "sometimes"
+    )
+
+    with pytest.raises(ConfigurationError):
+        CalculatorConfig()
+
+
+def test_invalid_max_input_environment(monkeypatch):
+    monkeypatch.setenv(
+        "CALCULATOR_MAX_INPUT_VALUE", "hello"
+    )
+
+    with pytest.raises(ConfigurationError):
+        CalculatorConfig()
+
+
+def test_auto_save_false(monkeypatch, tmp_path):
+    monkeypatch.setenv("CALCULATOR_AUTO_SAVE", "false")
+
+    config = CalculatorConfig(
+        log_dir=tmp_path / "logs",
+        history_dir=tmp_path / "history",
+    )
+
+    assert config.auto_save is False
+
+
+def test_invalid_encoding(tmp_path):
+    with pytest.raises(ConfigurationError):
+        CalculatorConfig(
+            log_dir=tmp_path / "logs",
+            history_dir=tmp_path / "history",
+            default_encoding="invalid-encoding-name",
+        )
+
+
+def test_nonfinite_max_input(tmp_path):
+    with pytest.raises(ConfigurationError):
+        CalculatorConfig(
+            log_dir=tmp_path / "logs",
+            history_dir=tmp_path / "history",
+            max_input_value=float("inf"),
+        )
