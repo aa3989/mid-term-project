@@ -55,12 +55,38 @@ class Calculator:
         for observer in self.observers:
             observer.update(calculation, self.history)
     
-    def save_history(self):
+    def save_history(self, force=False):
         """Persist the current history to CSV."""
-        if self.config.auto_save:
-            for observer in self.observers:
-                if isinstance(observer, AutoSaveObserver):
-                    observer.update(None, self.history)
+        if not self.config.auto_save and not force:
+            return
+
+        observer = next(
+            (
+                item for item in self.observers
+                if isinstance(item, AutoSaveObserver)
+            ),
+            None,
+        )
+
+        if observer is None:
+            observer = AutoSaveObserver(
+                self.config.history_file_path,
+                self.config.default_encoding,
+            )
+
+        try:
+            observer.update(None, self.history)
+            self.logger.info(
+                "History saved | Entries: %s | Path: %s",
+                len(self.history),
+                self.config.history_file_path,
+            )
+        except Exception:
+            self.logger.exception(
+                "History save failed | Path: %s",
+                self.config.history_file_path,
+            )
+            raise
 
     
     def calculate(self, operation, a, b):
@@ -73,7 +99,7 @@ class Calculator:
             )
 
             calculation = Calculation(operation, a, b)
-
+            calculation.result = round(calculation.result, self.config.precision)
             self.history_manager.add_calculation(
                 calculation
             )
@@ -118,14 +144,43 @@ class Calculator:
         if not file_path.exists():
             return
 
-        dataframe = pd.read_csv(
-            file_path,
-            encoding=self.config.default_encoding,
-        )
+        try:
+            dataframe = pd.read_csv(
+                file_path,
+                encoding=self.config.default_encoding,
+            )
 
-        calculations = [
-            Calculation.from_dict(row)
-            for row in dataframe.to_dict(orient="records")
-        ]
+            required_columns = {
+                "operation",
+                "operand1",
+                "operand2",
+                "result",
+                "timestamp",
+            }
+            missing_columns = required_columns - set(dataframe.columns)
+            if missing_columns:
+                raise ValueError(
+                    f"History file is missing columns: "
+                    f"{', '.join(sorted(missing_columns))}"
+                )
 
-        self.history_manager.replace_history(calculations)
+            calculations = [
+                Calculation.from_dict(row)
+                for row in dataframe.to_dict(orient="records")
+            ]
+
+            for calculation in calculations:
+                calculation.result = round(
+                    calculation.result,
+                    self.config.precision,
+                )
+
+            self.history_manager.replace_history(calculations)
+            self.logger.info(
+                "History loaded | Entries: %s | Path: %s",
+                len(calculations),
+                file_path,
+            )
+        except Exception:
+            self.logger.exception("History load failed | Path: %s", file_path)
+            raise
