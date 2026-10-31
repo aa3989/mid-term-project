@@ -9,7 +9,11 @@ def main():
     init(autoreset=True, strip=False)
 
     calculator = Calculator()
-    calculator.load_history()
+    try:
+        calculator.load_history()
+    except Exception as error:
+        print(Fore.RED + f"Error loading history: {error}" + Style.RESET_ALL)
+
     command_queue = CommandQueue()
 
     print(Fore.CYAN + "Advanced Python Calculator" + Style.RESET_ALL)
@@ -56,7 +60,23 @@ def main():
             elif command == "clear":
                 calculator.clear()
                 print(Fore.CYAN + "Calculation history cleared." + Style.RESET_ALL)
-                
+
+            elif command in ("save", "load"):
+                if len(parts) != 1:
+                    print(
+                        Fore.RED
+                        + f"Invalid {command} command. Use: {command}"
+                        + Style.RESET_ALL
+                    )
+                    continue
+
+                if command == "save":
+                    calculator.save_history(force=True)
+                    print(Fore.CYAN + "History saved." + Style.RESET_ALL)
+                else:
+                    calculator.load_history()
+                    print(Fore.CYAN + "History loaded." + Style.RESET_ALL)       
+
             elif command == "queue":
                 if len(parts) != 4:
                     print(
@@ -113,6 +133,9 @@ def main():
 
                 print(Fore.GREEN + f"Result: {result}" + Style.RESET_ALL)
 
+        except EOFError:
+            print(Fore.CYAN + "Goodbye!" + Style.RESET_ALL)
+            break
         except Exception as error:
             print(Fore.RED + f"Error: {error}" + Style.RESET_ALL)
 
