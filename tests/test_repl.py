@@ -88,6 +88,12 @@ def test_repl_empty_input(capsys):
 
     assert "Goodbye!" in output
 
+def test_repl_eof_exits_cleanly(capsys):
+    with patch("builtins.input", side_effect=EOFError):
+        main()
+
+    assert "Goodbye!" in capsys.readouterr().out
+
 def test_repl_module_entry_point():
     result = subprocess.run(
         [sys.executable, "-m", "app.repl"],
@@ -121,22 +127,23 @@ def test_repl_entry_point_coverage(capsys):
     assert "Advanced Python Calculator" in output
     assert "Goodbye!" in output
 
-def test_repl_loads_saved_history(capsys, tmp_path):
+def test_repl_save_and_load_history(capsys, tmp_path):
     from app.calculator import Calculator
     from app.calculator_config import CalculatorConfig
 
     config = CalculatorConfig(
         log_dir=tmp_path / "logs",
         history_dir=tmp_path / "history",
-        auto_save=True,
+        auto_save=False,
     )
 
     calculator = Calculator(config)
-    calculator.calculate("add", 10, 5)
 
     with patch("app.repl.Calculator", return_value=Calculator(config)):
-        output = run_repl(["history", "exit"], capsys)
+        output = run_repl(["add 10 5", "save", "clear", "load", "history", "exit"], capsys)
 
+    assert "History saved." in output
+    assert "History loaded." in output
     assert "10.0 add 5.0 = 15.0" in output
 
 
@@ -145,7 +152,34 @@ def test_repl_success_output_is_green(capsys):
 
     assert Fore.GREEN + "Result: 15.0" in output
 
+def test_repl_recovers_from_malformed_startup_history(capsys, tmp_path):
+    from app.calculator import Calculator
+    from app.calculator_config import CalculatorConfig
 
+    config = CalculatorConfig(
+        log_dir=tmp_path / "logs",
+        history_dir=tmp_path / "history",
+        auto_save=False,
+    )
+    config.history_file_path.write_text(
+        "invalid,header\nx,y\n",
+        encoding="utf-8",
+    )
+    calculator = Calculator(config)
+
+    with patch("app.repl.Calculator", return_value=calculator):
+        output = run_repl(["add 10 5", "exit"], capsys)
+
+    assert "Error loading history:" in output
+    assert "Result: 15.0" in output
+    assert "Goodbye!" in output
+
+def test_repl_rejects_extra_save_and_load_arguments(capsys):
+    output = run_repl(["save extra", "load extra", "exit"], capsys)
+
+    assert "Invalid save command" in output
+    assert "Invalid load command" in output
+    
 def test_repl_error_output_is_red(capsys):
     output = run_repl(["divide 10 0", "exit"], capsys)
 
