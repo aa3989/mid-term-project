@@ -24,6 +24,19 @@ def test_calculate(calculator):
     assert result == 15
     assert len(calculator.history) == 1
 
+def test_calculate_honors_precision(tmp_path):
+    config = CalculatorConfig(
+        log_dir=tmp_path / "logs",
+        history_dir=tmp_path / "history",
+        precision=2,
+    )
+    calculator = Calculator(config)
+
+    result = calculator.calculate("divide", 1, 3)
+
+    assert result == 0.33
+    assert calculator.history[0].result == 0.33
+
 
 def test_calculation_autosave(calculator):
     calculator.calculate("multiply", 4, 5)
@@ -118,6 +131,25 @@ def test_load_history_from_csv(tmp_path):
         == original.history[0].timestamp
     )
 
+def test_load_history_honors_precision(tmp_path):
+    history_dir = tmp_path / "history"
+    source_config = CalculatorConfig(
+        log_dir=tmp_path / "source-logs",
+        history_dir=history_dir,
+        precision=5,
+    )
+    Calculator(source_config).calculate("divide", 1, 3)
+
+    restored_config = CalculatorConfig(
+        log_dir=tmp_path / "restored-logs",
+        history_dir=history_dir,
+        precision=2,
+    )
+    restored = Calculator(restored_config)
+
+    restored.load_history()
+
+    assert restored.history[0].result == 0.33
 
 def test_load_history_when_file_missing(tmp_path):
     config = CalculatorConfig(
@@ -131,6 +163,24 @@ def test_load_history_when_file_missing(tmp_path):
 
     assert calculator.history == []
 
+def test_load_malformed_history_preserves_current_history(tmp_path):
+    config = CalculatorConfig(
+        log_dir=tmp_path / "logs",
+        history_dir=tmp_path / "history",
+        auto_save=False,
+    )
+    calculator = Calculator(config)
+    calculator.calculate("add", 10, 5)
+    config.history_file_path.write_text(
+        "invalid,header\nx,y\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="missing columns"):
+        calculator.load_history()
+
+    assert len(calculator.history) == 1
+    assert calculator.history[0].result == 15.0
 
 def test_undo_updates_saved_history(tmp_path):
     config = CalculatorConfig(
@@ -198,3 +248,19 @@ def test_save_history_when_autosave_disabled(tmp_path):
     calculator.save_history()
 
     assert not config.history_file_path.exists()
+
+def test_forced_save_does_not_enable_autosaving(tmp_path):
+    config = CalculatorConfig(
+        log_dir=tmp_path / "logs",
+        history_dir=tmp_path / "history",
+        auto_save=False,
+    )
+    calculator = Calculator(config)
+    calculator.calculate("add", 1, 2)
+
+    calculator.save_history(force=True)
+    calculator.calculate("add", 3, 4)
+
+    dataframe = pd.read_csv(config.history_file_path)
+    assert len(dataframe) == 1
+    assert len(calculator.history) == 2
