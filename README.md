@@ -9,7 +9,7 @@ The application supports ten mathematical operations, calculation history with u
 - Ten mathematical operations
 - Interactive command-line interface (REPL)
 - Calculation history with undo, redo, and clear
-- Automatic CSV history saving and loading
+- CSV history persistence with automatic saving and manual save/load commands
 - Factory, Memento, and Observer design patterns
 - Dynamic help menu generated from registered operations
 - Color-coded Outputs using Colorama for REPL
@@ -149,25 +149,29 @@ abs_diff 5 10
 | `exit` | Exit the calculator |
 | `quit` | Exit the calculator |
 | `queue <operation> <number1> <number2>` | Add a calculation to the command queue |
-| `run` | Execute queued calculations
+| `save` | Save history to CSV, including when autosave is disabled |
+| `load` | Replace current history with history from the CSV file |
+| `run` | Execute queued calculations |
 
 Example session:
+
+With `CALCULATOR_AUTO_SAVE=false` and no existing saved history, this example demonstrates manually saving a calculation, clearing in-memory history, and loading it back from CSV.
 
 ```text
 calculator> add 10 5
 Result: 15.0
 
-calculator> history
-1. 10.0 add 5.0 = 15.0
-
-calculator> undo
-Last history change undone.
-
-calculator> redo
-Last history change redone.
+calculator> save
+History saved.
 
 calculator> clear
 Calculation history cleared.
+
+calculator> load
+History loaded.
+
+calculator> history
+1. 10.0 add 5.0 = 15.0
 
 calculator> exit
 Goodbye!
@@ -270,7 +274,7 @@ CALCULATOR_DEFAULT_ENCODING=utf-8
 | `CALCULATOR_HISTORY_FILE` | `calculator_history.csv` | History filename |
 | `CALCULATOR_MAX_HISTORY_SIZE` | `100` | Maximum retained calculations |
 | `CALCULATOR_AUTO_SAVE` | `true` | Enable or disable automatic CSV saving |
-| `CALCULATOR_PRECISION` | `2` | Configured precision setting |
+| `CALCULATOR_PRECISION` | `2` | Decimal places to round calculation results to |
 | `CALCULATOR_MAX_INPUT_VALUE` | `1000000` | Maximum permitted operand magnitude |
 | `CALCULATOR_DEFAULT_ENCODING` | `utf-8` | File encoding |
 
@@ -296,6 +300,8 @@ When the REPL starts, it attempts to load previously saved history.
 
 When autosaving is enabled, new calculations and history changes are written to the CSV file.
 
+The `save` command writes the current history to the CSV even when autosaving is disabled. The `load` command replaces the current in-memory history with calculations from that file. Loaded results use the configured `CALCULATOR_PRECISION`.
+
 Saved calculations are reconstructed using `Calculation.from_dict()`, which recalculates results through the operation factory.
 
 ## Error Handling and Logging
@@ -311,6 +317,8 @@ Examples include:
 - Operands exceeding the configured maximum
 
 Errors are displayed in the REPL without immediately terminating the interactive session.
+
+If saved history is malformed or unreadable at startup, the REPL reports the error and continues with empty history. A failed manual load reports an error without replacing the current history. If input reaches EOF, the REPL prints “Goodbye!” and exits cleanly.
 
 Calculation activity and calculation errors are recorded through the logging system.
 
@@ -344,7 +352,7 @@ python -m pytest --cov=app --cov-report=term-missing --cov-fail-under=90
 
 At the time of documentation, the project has:
 
-- **161 passing tests**
+- **169 passing tests**
 - **100% statement coverage**
 - **90% minimum coverage requirement**
 
