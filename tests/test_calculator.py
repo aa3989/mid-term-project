@@ -264,3 +264,20 @@ def test_forced_save_does_not_enable_autosaving(tmp_path):
     dataframe = pd.read_csv(config.history_file_path)
     assert len(dataframe) == 1
     assert len(calculator.history) == 2
+
+def test_save_history_logs_and_reraises_error(calculator, monkeypatch):
+    def fail_save(self, calculation, history):
+        raise OSError("disk full")
+
+    monkeypatch.setattr(
+        "app.calculator.AutoSaveObserver.update",
+        fail_save,
+    )
+
+    with pytest.raises(OSError, match="disk full"):
+        calculator.save_history()
+
+    log_content = calculator.config.log_file_path.read_text(
+        encoding="utf-8"
+    )
+    assert "History save failed" in log_content
