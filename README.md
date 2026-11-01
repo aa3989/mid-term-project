@@ -280,6 +280,19 @@ CALCULATOR_DEFAULT_ENCODING=utf-8
 
 Configuration values are validated when the calculator starts. Required directories are created automatically.
 
+### Calculation Precision
+
+The `CALCULATOR_PRECISION` setting determines the number of decimal places used when rounding calculation results.
+
+For example, with `CALCULATOR_PRECISION=2`:
+
+```text
+calculator> divide 10 3
+Result: 3.33
+```
+
+The configured precision also applies when loading saved calculation history.
+
 ## History Persistence
 
 Calculation history is stored in a CSV file, by default:
@@ -304,6 +317,10 @@ The `save` command writes the current history to the CSV even when autosaving is
 
 Saved calculations are reconstructed using `Calculation.from_dict()`, which recalculates results through the operation factory.
 
+If the history CSV file does not exist, the calculator continues normally with an empty history. Running the `load` command displays `No history file found.` instead of reporting a successful load.
+
+Malformed or invalid history files are rejected without replacing the existing calculation history.
+
 ## Error Handling and Logging
 
 The calculator validates numeric operands and handles invalid operations and calculation errors.
@@ -315,6 +332,11 @@ Examples include:
 - Invalid numeric inputs
 - Invalid configuration values
 - Operands exceeding the configured maximum
+- Non-finite calculation results (`NaN` or infinity)
+- Invalid numeric values in saved CSV history
+- Missing history files during manual loading
+- Malformed or unreadable CSV history files
+- End-of-file (EOF) during interactive input
 
 Errors are displayed in the REPL without immediately terminating the interactive session.
 
@@ -352,7 +374,7 @@ python -m pytest --cov=app --cov-report=term-missing --cov-fail-under=90
 
 At the time of documentation, the project has:
 
-- **169 passing tests**
+- **182 passing tests**
 - **100% statement coverage**
 - **90% minimum coverage requirement**
 
