@@ -61,6 +61,7 @@ def main():
                 calculator.clear()
                 print(Fore.CYAN + "Calculation history cleared." + Style.RESET_ALL)
 
+
             elif command in ("save", "load"):
                 if len(parts) != 1:
                     print(
@@ -73,9 +74,19 @@ def main():
                 if command == "save":
                     calculator.save_history(force=True)
                     print(Fore.CYAN + "History saved." + Style.RESET_ALL)
+
                 else:
-                    calculator.load_history()
-                    print(Fore.CYAN + "History loaded." + Style.RESET_ALL)       
+                    loaded = calculator.load_history()
+
+                    if loaded:
+                        print(Fore.CYAN + "History loaded." + Style.RESET_ALL)
+                    else:
+                        print(
+                            Fore.YELLOW
+                            + "No history file found."
+                            + Style.RESET_ALL
+                        )
+
 
             elif command == "queue":
                 if len(parts) != 4:
