@@ -95,3 +95,25 @@ def test_calculation_from_dict_invalid_data():
 
     with pytest.raises(ValueError):
         Calculation.from_dict(invalid_data)
+
+@pytest.mark.parametrize(
+    "field",
+    ["operand1", "operand2", "result"]
+)
+@pytest.mark.parametrize(
+    "invalid_value",
+    ["nan", "inf", "-inf"]
+)
+def test_invalid_history_numbers(field, invalid_value):
+    data = {
+        "operation": "add",
+        "operand1": "10",
+        "operand2": "5",
+        "result": "15",
+        "timestamp": "2026-10-31T12:00:00",
+    }
+
+    data[field] = invalid_value
+
+    with pytest.raises(ValueError, match="NaN or infinity"):
+        Calculation.from_dict(data)
