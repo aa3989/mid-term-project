@@ -4,7 +4,7 @@ import pytest
 
 from app.calculator import Calculator
 from app.calculator_config import CalculatorConfig
-from app.exceptions import ValidationError
+from app.exceptions import ValidationError, OperationError
 
 
 @pytest.fixture
@@ -281,3 +281,22 @@ def test_save_history_logs_and_reraises_error(calculator, monkeypatch):
         encoding="utf-8"
     )
     assert "History save failed" in log_content
+
+def test_missing_history_returns_false(calculator):
+    assert calculator.load_history() is False
+
+
+def test_successful_history_load_returns_true(calculator):
+    calculator.calculate("add", 10, 5)
+
+    assert calculator.load_history() is True
+
+
+def test_infinite_result_is_rejected(calculator):
+    with pytest.raises(
+        OperationError,
+        match="finite number"
+    ):
+        calculator.calculate("percent", 1000000, 1e-320)
+
+    assert calculator.history == []
