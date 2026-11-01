@@ -142,8 +142,11 @@ class Calculator:
         file_path = self.config.history_file_path
 
         if not file_path.exists():
-            return
-
+            self.logger.warning(
+                "History file not found: %s",
+                file_path,
+            )
+            return False
         try:
             dataframe = pd.read_csv(
                 file_path,
@@ -179,8 +182,9 @@ class Calculator:
             self.logger.info(
                 "History loaded | Entries: %s | Path: %s",
                 len(calculations),
-                file_path,
+                file_path,   
             )
+            return True
         except Exception:
             self.logger.exception("History load failed | Path: %s", file_path)
             raise
