@@ -449,7 +449,6 @@ The `tests/` directory contains automated pytest tests covering calculator opera
 
 The `.github/workflows/` directory contains the GitHub Actions workflow that runs automated tests and enforces a minimum of 90% statement coverage.
 
-Runtime directories such as `logs/` and `history/` are created automatically.
 
 ## Repository
 
