@@ -146,6 +146,23 @@ def test_repl_save_and_load_history(capsys, tmp_path):
     assert "History loaded." in output
     assert "10.0 add 5.0 = 15.0" in output
 
+def test_repl_missing_history_message(capsys, tmp_path):
+    from app.calculator import Calculator
+    from app.calculator_config import CalculatorConfig
+
+    config = CalculatorConfig(
+        log_dir=tmp_path / "logs",
+        history_dir=tmp_path / "history",
+        auto_save=False,
+    )
+
+    calculator = Calculator(config)
+
+    with patch("app.repl.Calculator", return_value=calculator):
+        output = run_repl(["load", "exit"], capsys)
+
+    assert "No history file found." in output
+    assert "History loaded." not in output
 
 def test_repl_success_output_is_green(capsys):
     output = run_repl(["add 10 5", "exit"], capsys)
@@ -179,7 +196,7 @@ def test_repl_rejects_extra_save_and_load_arguments(capsys):
 
     assert "Invalid save command" in output
     assert "Invalid load command" in output
-    
+
 def test_repl_error_output_is_red(capsys):
     output = run_repl(["divide 10 0", "exit"], capsys)
 
