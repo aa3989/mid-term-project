@@ -70,12 +70,18 @@ Install dependencies:
 python -m pip install -r requirements.txt
 ```
 
+
 ## Running the Calculator
 
 Start the interactive calculator from the project root:
 
 ```bash
-python -m app.repl
+python3 -m main.py
+```
+Alternatively, run it as a Python module:
+
+```bash
+python3 -m app.repl
 ```
 
 The application displays:
@@ -321,6 +327,44 @@ If the history CSV file does not exist, the calculator continues normally with a
 
 Malformed or invalid history files are rejected without replacing the existing calculation history.
 
+### Auto-Save Configuration and Clear Behavior
+
+Automatic history saving is controlled by the `CALCULATOR_AUTO_SAVE` environment variable.
+
+- **`CALCULATOR_AUTO_SAVE=true` (default):** Automatically saves calculation history changes to the configured CSV file. Running `clear` also updates the CSV with the empty history. Therefore, previously saved calculations cannot be restored using `load` after clearing.
+- **`CALCULATOR_AUTO_SAVE=false`:** Disables automatic saving. Users can manually save history using `save` and restore it using `load`. Running `clear` removes calculations from memory without overwriting the previously saved CSV file.
+
+To test manual saving and loading, set:
+
+```env
+CALCULATOR_AUTO_SAVE=false
+```
+
+Restart the application and execute:
+
+```text
+calculator> add 100 50
+Result: 150.0
+
+calculator> multiply 7 8
+Result: 56.0
+
+calculator> save
+History saved.
+
+calculator> clear
+Calculation history cleared.
+
+calculator> load
+History loaded.
+
+calculator> history
+1. 100.0 add 50.0 = 150.0
+2. 7.0 multiply 8.0 = 56.0
+```
+
+For normal operation, `CALCULATOR_AUTO_SAVE=true` is recommended to automatically persist calculation history changes.
+
 ## Error Handling and Logging
 
 The calculator validates numeric operands and handles invalid operations and calculation errors.
@@ -437,6 +481,7 @@ mid-term-project/
 │   ├── test_operations.py
 │   └── test_repl.py
 ├── .gitignore
+├── main.py
 ├── README.md
 └── requirements.txt
 ```
