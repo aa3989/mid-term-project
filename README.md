@@ -76,7 +76,7 @@ python -m pip install -r requirements.txt
 Start the interactive calculator from the project root:
 
 ```bash
-python3 -m main.py
+python3 main.py
 ```
 Alternatively, run it as a Python module:
 
